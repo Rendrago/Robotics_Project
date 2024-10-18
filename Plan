@@ -1,5 +1,10 @@
 Endgoal:
 - 12 green blocks in one container, 4 purple blocks in one container, and one container with a mix
 How we do it:
--light sensor to detect the color of the blocks
-- 
+- light sensor to detect the color of the blocks
+  How we do it:
+  - function for reading brightness to detect the color of a block, then moving towards it
+- vision sensor can detect color, it can also detect dimensions of objects, and it can identify april tags
+  How we do it:
+  - 
+- Claw that grabs blocks then lifts them up and drops them in the bucket
