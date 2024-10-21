@@ -15,6 +15,12 @@ distanceSensor = Distance(Ports.PORT1)
 rightLineTracker = Line(brain.three_wire_port.b)
 middleLineTracker = Line(brain.three_wire_port.c)
 leftLineTracker = Line(brain.three_wire_port.d)
+motor_2 = Motor(Ports.PORT2, False)
+# AI Vision Color Descriptions
+visionSensor__RedRing = Colordesc(1, 221, 20, 72, 10, 0.2)
+visionSensor__BlueRing = Colordesc(2, 6, 27, 126, 10, 0.2)
+# AI Vision Code Descriptions
+visionSensor = AiVision(Ports.PORT3, visionSensor__RedRing, visionSensor__BlueRing)
 
 
 # Wait for sensor(s) to fully initialize
@@ -144,7 +150,28 @@ def inertial_turn(degrees):
     #stop turn
     driveMotors.stop()    
 
-
+def inertial_line_follower(motorSpeed,Kp):
+    threshold = (ltRightReading + ltMiddleReading + ltLeftReading)/3
+    driveMotors.set_velocity(motorSpeed,PERCENT)
+    driveMotors.spin(FORWARD)
+    '''while True:
+        leftError = ltRightReading - threshold
+        rightError = ltLeftReading - threshold
+        driveMotors.set_velocity(motorSpeed,PERCENT)
+        driveMotors.spin(FORWARD)
+        if ltLeftReading <= threshold:
+            driveMotors_motor_a.set_velocity(Kp*rightError,PERCENT)
+            driveMotors_motor_a.spin(REVERSE)
+        elif ltRightReading <= threshold:
+            driveMotors_motor_b.set_velocity(Kp*leftError,PERCENT)
+            driveMotors_motor_b.spin(REVERSE)'''
+    while True:
+        rightError = threshold - ltRightReading
+        leftError = threshold - ltLeftReading
+        if ltLeftReading <= threshold:
+            driveMotors_motor_b.set_velocity(((Kp*leftError)*motorSpeed)+motorSpeed,PERCENT)
+            driveMotors_motor_a.set_velocity(((Kp*rightError)*motorSpeed)+motorSpeed,PERCENT)
+        wait(.1,SECONDS)
 
 '''
 Description: Collects the current brightness level
@@ -185,9 +212,67 @@ Arg:
 Returns:
 - None
 '''
-#def vision_readings():
-
-
+def vision_readings():
+    global BlueRingWidth
+    global BlueRingHeight
+    global BlueRingCenterX
+    global BlueRingCenterY
+    global BlueRingNumObjects
+    global RedRingWidth
+    global RedRingHeight
+    global RedRingCenterX
+    global RedRingCenterY
+    global RedRingNumObjects
+    BlueRingWidth = None
+    BlueRingHeight = None
+    BlueRingCenterX = None
+    BlueRingCenterY = None
+    BlueRingNumObjects = None
+    RedRingWidth = None
+    RedRingHeight = None
+    RedRingCenterX = None
+    RedRingCenterY = None
+    RedRingNumObjects = None
+    while True:
+        wait(.02,SECONDS)
+        BlueRingObjects = visionSensor.take_snapshot(visionSensor__BlueRing)
+        RedRingObjects = visionSensor.take_snapshot(visionSensor__RedRing)
+        if BlueRingObjects[0].exists:
+            BlueRingNumObjects = len(BlueRingObjects)
+            BlueRingWidth = BlueRingObjects[0].width
+            BlueRingHeight = BlueRingObjects[0].height
+            BlueRingCenterX = BlueRingObjects[0].centerX
+            BlueRingCenterY = BlueRingObjects[0].centerY
+        else:
+            BlueRingWidth = None
+            BlueRingHeight = None
+            BlueRingCenterX = None
+            BlueRingCenterY = None
+            BlueRingNumObjects = None
+        if RedRingObjects[0].exists:
+            RedRingNumObjects = len(RedRingObjects)
+            RedRingWidth = RedRingObjects[0].width
+            RedRingHeight = RedRingObjects[0].height
+            RedRingCenterX = RedRingObjects[0].centerX
+            RedRingCenterY = RedRingObjects[0].centerY
+        else:
+            RedRingWidth = None
+            RedRingHeight = None
+            RedRingCenterX = None
+            RedRingCenterY = None
+            RedRingNumObjects = None
+def change_ring_color():
+    if BlueRingObjects[0].exists and RedRingObjects[0].exists:
+        if RedRingWidth * _RingHeight > _RingWidth * _RingHeight:
+            #
+            pass
+        else:
+            pass
+    elif BlueRingObjects[0].exists:
+        pass
+    else:
+        pass
+        
 '''
 Description: Collects the current reflection value
 # of Sensor: 1 (update to correct value)
@@ -262,7 +347,25 @@ def display_data():
     brain.screen.set_font(FontType.PROP20)
     wait(0.05,SECONDS)
     while True:
-        brain.screen.print("Position:",driveMotors.position(DEGREES))
+        brain.screen.print("Num. Objects: ",BlueRingNumObjects)
+        brain.screen.next_row()
+        brain.screen.print("Object 1 Width: ",BlueRingWidth)
+        brain.screen.next_row()
+        brain.screen.print("Object 1 Height: ",BlueRingHeight)
+        brain.screen.next_row()
+        brain.screen.print("Object 1 CenterX: ",BlueRingCenterX)
+        brain.screen.next_row()
+        brain.screen.print("Object 1 CenterY: ",BlueRingCenterY)
+        brain.screen.print("Num. Objects: ",RedRingNumObjects)
+        brain.screen.next_row()
+        brain.screen.print("Object 2 Width: ",RedRingWidth)
+        brain.screen.next_row()
+        brain.screen.print("Object 2 Height: ",RedRingHeight)
+        brain.screen.next_row()
+        brain.screen.print("Object 2 CenterX: ",RedRingCenterX)
+        brain.screen.next_row()
+        brain.screen.print("Object 2 CenterY: ",RedRingCenterY)
+        '''brain.screen.print("Position:",driveMotors.position(DEGREES))
         brain.screen.next_row()
         brain.screen.print("Light:",lightReading)
         brain.screen.next_row()
@@ -273,13 +376,14 @@ def display_data():
         brain.screen.print("Object Size:",objectSize)
         wait(.75,SECONDS)
         brain.screen.clear_screen()
-        brain.screen.set_cursor(1,1)
+        brain.screen.set_cursor(1,1)'''
 
 #Thread Section 
 #lightSensorThread = Thread(light_readings)
-distanceSensorThread = Thread(distance_readings)
-#displayDataThread = Thread(display_data)
-lineTrackerThread = Thread(linetracker_readings)
+#lineTrackerThread = Thread(linetracker_readings)
+visionSensorReadings = Thread(vision_readings)
+#distanceSensorThread = Thread(distance_readings)
+displayDataThread = Thread(display_data)
 #SD Card File Setup for Writing Data
 
 #Inertial Sensor Setup
@@ -296,29 +400,11 @@ while not brain.sdcard.is_inserted():
 #file = open("myRobot.csv","w")
 #file.write("{},{}\n".format("Position","Light"))
 #Main Program
-threshold = (ltRightReading + ltMiddleReading + ltLeftReading)/3
-Kp = 0.1
-motorSpeed = 15
-'''while True:
-    leftError = ltRightReading - threshold
-    rightError = ltLeftReading - threshold
-    if ltMiddleReading < 50:
-        driveMotors.set_velocity(motorSpeed,PERCENT)
-        driveMotors.spin(FORWARD)
-    elif ltLeftReading <= threshold:
-        driveMotors_motor_a.set_velocity(Kp*rightError,PERCENT)
-        driveMotors_motor_a.spin(REVERSE)
-    elif ltRightReading <= threshold:
-        driveMotors_motor_b.set_velocity(Kp*leftError,PERCENT)
-        driveMotors_motor_b.spin(REVERSE)'''
+x = 200 * .15
 while True:
-    rightError = threshold - ltRightReading
-    leftError = threshold - ltLeftReading
-    if ltMiddleReading < 50:
-        driveMotors.set_velocity(motorSpeed,PERCENT)
-        driveMotors.spin(FORWARD)
-    elif ltLeftReading <= threshold:
-        driveMotors_motor_b.set_velocity(((Kp*leftError))+motorSpeed,PERCENT)
-    elif ltRightReading <= threshold:
-        driveMotors_motor_a.set_velocity(((Kp*rightError))+motorSpeed,PERCENT)
-    wait(.1,SECONDS)
+   while distanceReading > 8:
+       driveMotors_motor_a.spin(FORWARD)
+       driveMotors_motor_a.spin(REVERSE)
+   linear_inertial(x,8)
+   if distanceSensor.object_velocity() < 0:
+       x += (200 * .10)
