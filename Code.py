@@ -400,11 +400,26 @@ while not brain.sdcard.is_inserted():
 #file = open("myRobot.csv","w")
 #file.write("{},{}\n".format("Position","Light"))
 #Main Program
-x = 200 * .15
+countWalls = 0
+
+
 while True:
-   while distanceReading > 8:
-       driveMotors_motor_a.spin(FORWARD)
-       driveMotors_motor_a.spin(REVERSE)
-   linear_inertial(x,8)
-   if distanceSensor.object_velocity() < 0:
-       x += (200 * .10)
+   linear_inertial(45, 2.5)
+
+   if distanceReading <= 2.5:
+       countWalls +=1
+      
+       if countWalls == 1:
+           wait(0.5,SECONDS)
+           
+           driveMotors.set_velocity(45, PERCENT)
+           driveMotors.spin(REVERSE)
+           driveMotors.stop()
+           wait(0.25,SECONDS)
+           inertial_turn(90)
+           driveMotors.set_velocity(45, PERCENT)
+           driveMotors.spin(FORWARD)
+      
+       elif countWalls == 2:
+           wait(0.5, SECONDS)
+           inertial_turn(180)
