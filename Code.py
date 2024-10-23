@@ -262,17 +262,25 @@ def vision_readings():
             RedRingCenterY = None
             RedRingNumObjects = None
 def change_ring_color():
-    if BlueRingObjects[0].exists and RedRingObjects[0].exists:
-        if RedRingWidth * _RingHeight > _RingWidth * _RingHeight:
-            #
-            pass
+    if BlueRingNumObjects > 0 and RedRingNumObjects > 0:
+        if (RedRingWidth * RedRingHeight) > (BlueRingWidth * BlueRingHeight):
+            while RedRingNumObjects != None:
+                motor_2.spin(FORWARD)
         else:
-            pass
-    elif BlueRingObjects[0].exists:
-        pass
+            while BlueRingNumObjects != None:
+                motor_2.spin(FORWARD)
+    elif BlueRingNumObjects > 0:
+        while BlueRingNumObjects != None:
+            motor_2.spin(FORWARD)
+    elif RedRingNumObjects > 0:
+        while RedRingNumObjects != None:
+            motor_2.spin(FORWARD)
     else:
-        pass
-        
+        brain.screen.clear_screen()
+        wait(.2,SECONDS)
+        brain.screen.set_cursor(1,1)
+        brain.screen.print("No colors")
+        wait(.2,SECONDS)
 '''
 Description: Collects the current reflection value
 # of Sensor: 1 (update to correct value)
@@ -382,7 +390,7 @@ def display_data():
 #lightSensorThread = Thread(light_readings)
 #lineTrackerThread = Thread(linetracker_readings)
 visionSensorReadings = Thread(vision_readings)
-#distanceSensorThread = Thread(distance_readings)
+distanceSensorThread = Thread(distance_readings)
 displayDataThread = Thread(display_data)
 #SD Card File Setup for Writing Data
 
@@ -404,9 +412,9 @@ countWalls = 0
 
 
 while True:
-   linear_inertial(45, 2.5)
+   linear_inertial(45, 2)
 
-   if distanceReading <= 2.5:
+   if distanceReading <= 4.5:
        countWalls +=1
       
        if countWalls == 1:
